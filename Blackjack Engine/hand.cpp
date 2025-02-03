@@ -59,13 +59,13 @@ Dealer::Action Dealer::decideAction()
 	);
 }
 
-void Dealer::displayHand(bool hidden = true)
+void Dealer::displayHand(bool hidden)
 {
 	if (hand_.empty()) {
 		throw std::runtime_error("Cannot display empty hand");
 	}
 
-	std::cout << "Dealer Hand:\n";
+	std::cout << "Dealer Hand: ";
 
 	if (!hidden) {
 		// Display all cards
@@ -135,9 +135,32 @@ void Player::displayHand()
 		throw std::runtime_error("Cannot display empty hand");
 	}
 
-	std::cout << "Player Hand:n";
+	std::cout << "Player Hand: ";
 
 	for (Card& card : hand_) {
 		std::cout << card.getRankAsString() << " ";
 	}
+
+	std::cout << "\nHand Value: " << getHandValue() << "\n\n";
+}
+
+void Player::displayBetAndBankroll() const
+{
+	std::cout << "Bankroll: " << bankroll_ << std::endl;
+	std::cout << "Bet: " << bet_ << "\n\n";
+}
+
+Player::Action Player::normalHandStrategy_(const Card& upcard)
+{
+	return Player::Action();
+}
+
+Player::Action Player::softHandStrategy_(const Card& upcard)
+{
+	return Player::Action();
+}
+
+Player::Action Player::pairHandStrategy_(const Card& upcard)
+{
+	return Player::Action();
 }
