@@ -35,7 +35,7 @@ public:
 
 	// Auto plays the dealer's hand
 	Dealer::Action decideAction();
-	void displayHand(bool hidden);
+	void displayHand(bool hidden = true);
 };
 
 class Player : public Hand {
@@ -57,17 +57,18 @@ public:
 	// Updates the player's bankroll based on the outcome
 	void updateBankroll(Player::Outcome outcome);
 	void displayHand();
+	void displayBetAndBankroll() const;
 	// Getters
-	int getBankroll() const { return bankroll_; };
-	int getBet() const { return bet_; };
+	double getBankroll() const { return bankroll_; };
+	double getBet() const { return bet_; };
 	bool isPlayerBroke() const { return bankroll_ == 0; };
 
 private:
-	int bankroll_; // Player's available money
-	int bet_;
+	double bankroll_; // Player's available money
+	double bet_;
 
-	// Strategies for the player
-	Player::Action normalHandStrategy(const Card& upcard);
-	Player::Action softHandStrategy(const Card& upcard);
-	Player::Action pairHandStrategy(const Card& upcard);
+	// Private strategy methods for the player
+	Player::Action normalHandStrategy_(const Card& upcard);
+	Player::Action softHandStrategy_(const Card& upcard);
+	Player::Action pairHandStrategy_(const Card& upcard);
 };
