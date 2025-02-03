@@ -59,12 +59,85 @@ Dealer::Action Dealer::decideAction()
 	);
 }
 
-void Dealer::displayHand()
+void Dealer::displayHand(bool hidden = true)
 {
-	std::cout << "Dealer Hand:" << std::endl;
+	if (hand_.empty()) {
+		throw std::runtime_error("Cannot display empty hand");
+	}
+
+	std::cout << "Dealer Hand:\n";
+
+	if (!hidden) {
+		// Display all cards
+		for (Card& card : hand_) {
+			std::cout << card.getRankAsString() << " ";
+		}
+	}
+	else {
+		// Display only the first card and hide the second
+		std::cout << hand_[0].getRankAsString() << " ";
+		std::cout << "??";
+	}
+	std::cout << "\n\n";
+}
+
+
+// Player Methods
+void Player::calculateBet(int min_bet, int max_bet)
+{
+	bet_ = std::ceil(bankroll_ * 0.01);
+}
+
+Player::Action Player::decideAction(const Card& upcard)
+{
+
+	return Player::Action();
+}
+
+void Player::displayAction(Player::Action action)
+{
+	switch (action) {
+	case Player::Action::HIT:
+		std::cout << "Player hits\n\n";
+		break;
+	case Player::Action::STAND:
+		std::cout << "Player stands\n\n";
+		break;
+	case Player::Action::DOUBLE:
+		std::cout << "Player doubles down\n\n";
+		break;
+	case Player::Action::SPLIT:
+		std::cout << "Player splits\n\n";
+		break;
+	}
+}
+
+void Player::updateBankroll(Player::Outcome outcome)
+{
+	switch (outcome) {
+	case Player::Outcome::BLACKJACK:
+		bankroll_ += std::round(bet_ * 1.5);
+		break;
+
+	case Player::Outcome::WIN:
+		bankroll_ += bet_;
+		break;
+
+	case Player::Outcome::LOSE:
+		bankroll_ -= bet_;
+		break;
+	}
+}
+
+void Player::displayHand()
+{
+	if (hand_.empty()) {
+		throw std::runtime_error("Cannot display empty hand");
+	}
+
+	std::cout << "Player Hand:n";
 
 	for (Card& card : hand_) {
 		std::cout << card.getRankAsString() << " ";
 	}
-	std::cout << std::endl << std::endl;
 }
