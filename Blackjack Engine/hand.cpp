@@ -3,50 +3,73 @@
 // Hand Methods
 void Hand::dealHand(Deck& deck)
 {
-	if (!hand_.empty()) {
-		throw std::runtime_error("Hand must be empty before dealing two cards");
-	}
-
 	for (int i = 0; i < Hand::NUM_INITAL_CARDS; i++) {
-		hand_.push_back(deck.drawCard());
+		hitHand(deck);
 	}
-}
-
-int Hand::getHandValue()
-{
-	if (hand_.empty()) {
-		throw std::runtime_error("Cannot calculate hand value from empty hand");
-	}
-
-	int ace_count = 0, hand_value = 0;
-	for (Card& card : hand_) {
-		hand_value += Card::rankToValue(card.rank);
-		if (card.getRankAsString() == "A") {
-			ace_count++;
-		}
-	}
-
-	while (hand_value > 21 && ace_count > 0) {
-		hand_value -= (Card::rankToValue(Card::Rank::ACE) - Card::ACE_ALTERNATIVE_VALUE);
-		ace_count--;
-	}
-
-	is_hand_soft_ = (ace_count > 0);
-	return hand_value;
-}
-
-void Hand::clearHand()
-{
-	hand_.clear();
 }
 
 void Hand::hitHand(Deck& deck)
 {
 	if (hand_.empty()) {
-		throw std::runtime_error("Can't hit an empty hand");
+		throw std::runtime_error("Can't deal card to empty hand");
 	}
 
-	hand_.push_back(deck.drawCard());
+	Card card = deck.drawCard();
+	if (card.rank == Card::Rank::ACE) {
+		num_aces_++;
+	}
+
+	hand_.push_back(card);
+}
+
+int Hand::getHandValue() const
+{
+	if (hand_.empty()) {
+		throw std::runtime_error("Cannot calculate hand value from empty hand");
+	}
+
+	int hand_value = 0;
+	for (const Card& card : hand_) {
+		hand_value += Card::rankToValue(card.rank);
+	}
+
+	int ace_count = num_aces_;
+	while (hand_value > Hand::BLACKJACK && num_aces_ > 0) {
+		// Change the value of the Ace from 11 to 1
+		hand_value -= (Card::rankToValue(Card::Rank::ACE) - Card::ACE_ALTERNATIVE_VALUE);
+		ace_count--;
+	}
+
+	return hand_value;
+}
+
+void Hand::clearHand()
+{
+	num_aces_ = 0;
+	hand_.clear();
+}
+
+bool Hand::isSoftHand() const
+{
+	if (hand_.empty()) {
+		throw std::runtime_error("Cannot calculate if hand is soft from empty hand");
+	}
+
+	int hand_value = 0;
+	for (const Card& card : hand_) {
+		hand_value += Card::rankToValue(card.rank);
+	}
+
+	return (hand_value <= Hand::BLACKJACK && num_aces_ > 0);
+}
+
+bool Hand::isPairHand() const
+{
+	if (hand_.empty()) {
+		throw std::runtime_error("Cannot calculate if hand is a pair from empty hand");
+	}
+
+	return (hand_.size() == 2 && hand_[0].rank == hand_[1].rank);
 }
 
 // Dealer Methods
@@ -88,13 +111,31 @@ void Player::calculateBet(int min_bet, int max_bet)
 	bet_ = std::ceil(bankroll_ * 0.01);
 }
 
-Player::Action Player::decideAction(const Card& upcard)
+Player::Action Player::decideAction(const Card& upcard) const
 {
 
 	return Player::Action();
 }
 
-void Player::displayAction(Player::Action action)
+Player::Action Player::generateHardHandLookupTable() const
+{
+	return Action();
+}
+
+
+Player::Action Player::generateSoftHandLookupTable() const
+{
+	return Action();
+}
+
+
+Player::Action Player::generatePairHandLookupTable() const
+{
+	return Action();
+}
+
+
+void Player::displayAction(Player::Action action) const
 {
 	switch (action) {
 	case Player::Action::HIT:
@@ -129,7 +170,7 @@ void Player::updateBankroll(Player::Outcome outcome)
 	}
 }
 
-void Player::displayHand()
+void Player::displayHand() const
 {
 	if (hand_.empty()) {
 		throw std::runtime_error("Cannot display empty hand");
@@ -137,7 +178,7 @@ void Player::displayHand()
 
 	std::cout << "Player Hand: ";
 
-	for (Card& card : hand_) {
+	for (const Card& card : hand_) {
 		std::cout << card.getRankAsString() << " ";
 	}
 
@@ -148,19 +189,4 @@ void Player::displayBetAndBankroll() const
 {
 	std::cout << "Bankroll: " << bankroll_ << std::endl;
 	std::cout << "Bet: " << bet_ << "\n\n";
-}
-
-Player::Action Player::normalHandStrategy_(const Card& upcard)
-{
-	return Player::Action();
-}
-
-Player::Action Player::softHandStrategy_(const Card& upcard)
-{
-	return Player::Action();
-}
-
-Player::Action Player::pairHandStrategy_(const Card& upcard)
-{
-	return Player::Action();
 }
