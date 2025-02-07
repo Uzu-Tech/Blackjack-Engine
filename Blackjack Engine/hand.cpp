@@ -10,15 +10,7 @@ void Hand::dealHand(Deck& deck)
 
 void Hand::hitHand(Deck& deck)
 {
-	if (hand_.empty()) {
-		throw std::runtime_error("Can't deal card to empty hand");
-	}
-
 	Card card = deck.drawCard();
-	if (card.rank == Card::Rank::ACE) {
-		num_aces_++;
-	}
-
 	hand_.push_back(card);
 }
 
@@ -28,13 +20,15 @@ int Hand::getHandValue() const
 		throw std::runtime_error("Cannot calculate hand value from empty hand");
 	}
 
-	int hand_value = 0;
+	int hand_value = 0, ace_count = 0;
 	for (const Card& card : hand_) {
 		hand_value += Card::rankToValue(card.rank);
+		if (card.rank == Card::Rank::ACE) {
+			ace_count++;
+		}
 	}
 
-	int ace_count = num_aces_;
-	while (hand_value > HandConstants::BLACKJACK && num_aces_ > 0) {
+	while (hand_value > HandConstants::BLACKJACK && ace_count > 0) {
 		// Change the value of the Ace from 11 to 1
 		hand_value -= (Card::rankToValue(Card::Rank::ACE) - Card::ACE_ALTERNATIVE_VALUE);
 		ace_count--;
@@ -45,7 +39,6 @@ int Hand::getHandValue() const
 
 void Hand::clearHand()
 {
-	num_aces_ = 0;
 	hand_.clear();
 }
 
@@ -55,12 +48,21 @@ bool Hand::isSoftHand() const
 		throw std::runtime_error("Cannot calculate if hand is soft from empty hand");
 	}
 
-	int hand_value = 0;
+	int hand_value = 0, ace_count = 0;
 	for (const Card& card : hand_) {
 		hand_value += Card::rankToValue(card.rank);
+		if (card.rank == Card::Rank::ACE) {
+			ace_count++;
+		}
 	}
 
-	return (hand_value <= HandConstants::BLACKJACK && num_aces_ > 0);
+	while (hand_value > HandConstants::BLACKJACK && ace_count > 0) {
+		// Change the value of the Ace from 11 to 1
+		hand_value -= (Card::rankToValue(Card::Rank::ACE) - Card::ACE_ALTERNATIVE_VALUE);
+		ace_count--;
+	}
+
+	return (hand_value <= HandConstants::BLACKJACK && ace_count > 0);
 }
 
 bool Hand::isPairHand() const
@@ -70,4 +72,16 @@ bool Hand::isPairHand() const
 	}
 
 	return (hand_.size() == 2 && hand_[0].rank == hand_[1].rank);
+}
+
+std::string Hand::handValueToString() const
+{
+	int hand_value = getHandValue();
+
+	if (hand_value > HandConstants::BLACKJACK) {
+		return "Bust";
+	}
+	else {
+		return std::to_string(getHandValue());
+	}
 }
