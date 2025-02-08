@@ -1,7 +1,6 @@
 #pragma once
 #include "deck.h"
 #include <iostream>
-#include <cmath>
 
 namespace HandConstants {
 	// General hand-related constants
@@ -28,6 +27,8 @@ namespace HandConstants {
 	constexpr int NUM_SOFT_HANDS = MAX_SOFT_HAND - MIN_SOFT_HAND + 1;
 	constexpr int NUM_PAIR_HANDS = MAX_PAIR_HAND - MIN_PAIR_HAND + 1;
 	constexpr int NUM_DEALER_UPCARDS = MAX_DEALER_UPCARD - MIN_DEALER_UPCARD + 1;
+
+	constexpr int NUM_CARDS_FOR_DOUBLE = 2;
 }
 
 class Hand {
