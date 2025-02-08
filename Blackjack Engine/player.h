@@ -1,13 +1,17 @@
 #pragma once
 #include "deck.h"
 #include "hand.h"
+#include <unordered_map>
+#include <cmath>
 
 class Player {
 public:
 	// Possible actions for the player
 	enum class Action { HIT, STAND, DOUBLE, SPLIT, DOUBLE_OR_STAND };
 	// Possible outcomes for the player
-	enum class Outcome { BLACKJACK, WIN, LOSE };
+	enum class Outcome { BLACKJACK, BUST, STAND, SPLIT };
+	// Results for displaying to terminal
+	enum class Result { BLACKJACK, BUST, WIN, LOSE, TIE, DEALER_BUST, DEALER_BLACKJACK };
 
 	// Player starts with zero bet
 	Player(int bankroll) : bankroll_(bankroll), bet_(0), split_bet_(0),
@@ -33,14 +37,14 @@ public:
 	};
 
 	// Calculates the bet based on the player's strategy
-	void calculateBet(int min_bet, int max_bet);
+	void calculateBet(int max_bankroll);
 	// Implements a strategy to decide the player's action
 	Action decideAction(const Card& upcard) const;
 	// Actions
 	void doubleDown(Deck& deck);
 	void splitHand(Deck& deck);
 	// Switch hands
-	void changeToSplitHand()
+	void switchToSplitHand()
 	{
 		if (!has_split_) {
 			throw std::runtime_error("Cannot switch to the split hand without splitting");
@@ -49,22 +53,27 @@ public:
 		current_bet_ = &split_bet_;
 		current_hand_ = &split_hand_;
 	}
-	void revertToNormalHand() {
+	void switchToNormalHand() {
 		if (!has_split_) {
 			throw std::runtime_error("Cannot revert to normal hand if hands aren't split");
 		}
 
 		current_hand_ = &hand_;
+		current_bet_ = &bet_;
 	}
 	// Outcome checks
 	bool isBust() const { return current_hand_->getHandValue() > HandConstants::BLACKJACK; };
 	bool hasBlackjack() const { return current_hand_->getHandValue() == HandConstants::BLACKJACK; };
 	// Displays the player's action to the console
 	void displayAction(Action action) const;
+	void displayResult(Player::Result result) const;
 	// Updates the player's bankroll based on the outcome
-	void updateBankroll(Outcome outcome);
+	Player::Result updateBankroll(int dealer_hand_value);
 	void displayHand() const;
 	void displayBetAndBankroll() const;
+
+	void reset();
+
 	// Getters
 	bool hasSplit() const { return has_split_; };
 	bool hasDoubled() const { return has_doubled_; };
@@ -72,15 +81,16 @@ public:
 	double getBankroll() const { return bankroll_; };
 	double getBet() const { return bet_; };
 	bool isBroke() const { return bankroll_ == 0; };
-	int getHandLength() const { return current_hand_->getHand().size(); }
+	size_t getHandLength() const { return current_hand_->getHand().size(); }
+
 
 private:
 	double bankroll_; // Player's available money
 
 	// Bets
-	double bet_;
-	double split_bet_;
-	double* current_bet_ = &bet_;
+	int bet_;
+	int split_bet_;
+	int* current_bet_ = &bet_;
 
 	bool has_split_ = false;
 	bool has_doubled_ = false;

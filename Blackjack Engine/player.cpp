@@ -1,9 +1,9 @@
 #include "player.h"
 
 // Player Methods
-void Player::calculateBet(int min_bet, int max_bet)
+void Player::calculateBet(int max_bankroll)
 {
-	bet_ = std::ceil(bankroll_ * 0.01);
+	bet_ = static_cast<int>(std::ceil(max_bankroll * 0.01));
 }
 
 Player::Action Player::decideAction(const Card& upcard) const
@@ -257,9 +257,80 @@ void Player::generatePairHandLookupTable_()
 	}
 }
 
+Player::Result Player::updateBankroll(int dealer_value)
+{
+	int hand_value = current_hand_->getHandValue();
+
+	if (hand_value > HandConstants::BLACKJACK) {
+		bankroll_ -= *current_bet_;
+		return Player::Result::BUST;
+	}
+	else if (hand_value == HandConstants::BLACKJACK) {
+		bankroll_ += *current_bet_ * 1.5;
+		return Player::Result::BLACKJACK;
+	}
+	else if (hand_value > dealer_value || dealer_value > HandConstants::BLACKJACK) {
+		bankroll_ += *current_bet_;
+		return (dealer_value > HandConstants::BLACKJACK) ? 
+				Player::Result::DEALER_BUST : Player::Result::WIN;
+	}
+	else if (hand_value < dealer_value || dealer_value == HandConstants::BLACKJACK) {
+		bankroll_ -= *current_bet_;
+		return (dealer_value == HandConstants::BLACKJACK) ?
+			Player::Result::DEALER_BLACKJACK : Player::Result::LOSE;
+	}
+	return Player::Result::TIE;
+}
+
+void Player::reset()
+{
+	hand_.clearHand();
+	split_hand_.clearHand();
+	has_split_ = false;
+	has_doubled_ = false;
+	current_hand_ = &hand_;
+	current_bet_ = &bet_;
+	split_bet_ = 0;
+}
+
+void Player::displayBetAndBankroll() const
+{
+	if (Settings::DISPLAY_OFF) { return; }
+	std::cout << "Bankroll: " << bankroll_ << std::endl;
+	std::cout << "Bet: " << bet_ << "\n\n";
+}
+
+void Player::displayHand() const
+{
+	if (Settings::DISPLAY_OFF) { return; }
+	if (hand_.isEmpty()) {
+		throw std::runtime_error("Cannot display empty hand");
+	}
+
+	// If on the split hand display the extra information
+	std::cout << "Player Hand: ";
+
+	for (const Card& card : hand_.getHand()) {
+		std::cout << card.getRankAsString() << " ";
+	}
+
+	std::cout << "\nHand Value: " << hand_.handValueToString();
+
+	if (has_split_) {
+		std::cout << "\n\nPlayer Hand 2: ";
+		for (const Card& card : split_hand_.getHand()) {
+			std::cout << card.getRankAsString() << " ";
+		}
+
+		std::cout << "\nHand Value: " << split_hand_.handValueToString();
+	}
+
+	std::cout << "\n\n";
+}
 
 void Player::displayAction(Player::Action action) const
 {
+	if (Settings::DISPLAY_OFF) { return; }
 	switch (action) {
 	case Player::Action::HIT:
 		std::cout << "Player hits\n\n";
@@ -276,52 +347,28 @@ void Player::displayAction(Player::Action action) const
 	}
 }
 
-void Player::updateBankroll(Player::Outcome outcome)
-{
-	switch (outcome) {
-	case Player::Outcome::BLACKJACK:
-		bankroll_ += std::round(bet_ * 1.5);
-		break;
+void Player::displayResult(Player::Result result) const {
+	if (Settings::DISPLAY_OFF) { return; }
+	static const std::unordered_map<Player::Result, std::string> resultMessages = {
+		{Player::Result::BLACKJACK, "Player Blackjack!!"},
+		{Player::Result::BUST, "Player Busts"},
+		{Player::Result::WIN, "Player Wins"},
+		{Player::Result::LOSE, "Player Loses"},
+		{Player::Result::TIE, "Player Ties"},
+		{Player::Result::DEALER_BLACKJACK, "Dealer Blackjack"},
+		{Player::Result::DEALER_BUST, "Dealer Busts"}
+	};
 
-	case Player::Outcome::WIN:
-		bankroll_ += bet_;
-		break;
-
-	case Player::Outcome::LOSE:
-		bankroll_ -= bet_;
-		break;
+	// Display hand number if playing on split hand
+	if (isOnSplitHand()) {
+		std::cout << "(Hand 2) ";
 	}
-}
-
-void Player::displayHand() const
-{
-	if (hand_.isEmpty()) {
-		throw std::runtime_error("Cannot display empty hand");
+	else if (has_split_) {
+		std::cout << "(Hand 1) ";
 	}
 
-	// If on the split hand display the extra information
-	std::cout << "Player Hand: ";
-
-	for (const Card& card : hand_.getHand()) {
-		std::cout << card.getRankAsString() << " ";
-	}
-
-	std::cout << "\nHand Value: " << hand_.handValueToString();
-
-	if (has_split_) {
-		std::cout << "\n\n\Player Hand 2: ";
-		for (const Card& card : split_hand_.getHand()) {
-			std::cout << card.getRankAsString() << " ";
-		}
-
-		std::cout << "\n\Hand Value: " << split_hand_.handValueToString();
-	}
-
-	std::cout << "\n\n";
-}
-
-void Player::displayBetAndBankroll() const
-{
-	std::cout << "Bankroll: " << bankroll_ << std::endl;
-	std::cout << "Bet: " << bet_ << "\n\n";
+	// Fetch message from map
+	auto message = resultMessages.find(result);
+	std::cout << message->second;
+	std::cout << "\n";
 }
