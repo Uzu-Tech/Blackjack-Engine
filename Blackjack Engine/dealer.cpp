@@ -12,6 +12,7 @@ Dealer::Action Dealer::decideAction()
 
 void Dealer::displayHand(bool hidden) const
 {
+	if (Settings::DISPLAY_OFF) { return; }
 	if (hand_.isEmpty()) {
 		throw std::runtime_error("Cannot display empty hand");
 	}
@@ -35,6 +36,7 @@ void Dealer::displayHand(bool hidden) const
 
 void Dealer::displayAction(Dealer::Action action) const 
 {
+	if (Settings::DISPLAY_OFF) { return; }
 	switch (action) {
 	case Dealer::Action::HIT:
 		std::cout << "Dealer hits\n\n";

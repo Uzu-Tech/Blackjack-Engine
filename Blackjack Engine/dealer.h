@@ -25,6 +25,12 @@ public:
 
 		return hand_.getHand().front(); 
 	};
+	int getHandValue() const { return hand_.getHandValue(); }
+
+	bool isBust() const { return hand_.getHandValue() > HandConstants::BLACKJACK; };
+	bool hasBlackjack() const { return hand_.getHandValue() == HandConstants::BLACKJACK; };
+
+	void reset() { hand_.clearHand(); };
 
 	// Auto plays the dealer's hand
 	Action decideAction();
