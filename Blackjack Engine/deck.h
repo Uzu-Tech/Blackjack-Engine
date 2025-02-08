@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <queue>
+#include "rules.h"
 
 struct Card {
     static constexpr int ACE_ALTERNATIVE_VALUE = 1;
@@ -33,6 +34,7 @@ public:
     std::vector<Card> getDeck() { return deck_; };
     Card drawCard();
     void riffleShuffleDeck();
+    size_t size() { return deck_.size(); }
 
 private:
     std::vector<Card> deck_;

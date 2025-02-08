@@ -35,17 +35,20 @@ void Deck::buildDeck() {
     deck_.clear();
     deck_.reserve(DECK_SIZE);
 
-    for (int suit = static_cast<int>(Card::Suit::CLUB);
-        suit <= static_cast<int>(Card::Suit::DIAMOND);
-        suit++) {
+    for (int i = 0; i < Rules::NUM_DECKS; i++) {
+        // Fill each deck with every suit and rank combo
+        for (int suit = static_cast<int>(Card::Suit::CLUB);
+            suit <= static_cast<int>(Card::Suit::DIAMOND);
+            suit++) {
 
-        for (int rank = static_cast<int>(Card::Rank::TWO);
-            rank <= static_cast<int>(Card::Rank::ACE);
-            rank++) {
+            for (int rank = static_cast<int>(Card::Rank::TWO);
+                rank <= static_cast<int>(Card::Rank::ACE);
+                rank++) {
 
-            deck_.emplace_back(
-                static_cast<Card::Rank>(rank), static_cast<Card::Suit>(suit)
-            );
+                deck_.emplace_back(
+                    static_cast<Card::Rank>(rank), static_cast<Card::Suit>(suit)
+                );
+            }
         }
     }
 }
@@ -71,7 +74,7 @@ Card Deck::drawCard() {
 
 
 void Deck::riffleShuffleDeck() {
-    if (deck_.size() != Deck::DECK_SIZE) {
+    if (deck_.size() != Deck::DECK_SIZE * Rules::NUM_DECKS) {
         throw std::runtime_error("Deck should be full before riffle shuffling");
     }
 
@@ -81,15 +84,17 @@ void Deck::riffleShuffleDeck() {
     for (int i = 0; i < deck_.size(); i++) {
         // Even indices
         if (i % 2 == 0 && !card_queue.empty()) {
-            // Top half indices are already moved in deck
+            // Add the stored card
             if (i < deck_.size() / 2)
                 card_queue.push(deck_[i]);
-            // Add the stored card
             deck_[i] = card_queue.front();
             card_queue.pop();
         }
         // Odd indices 
         else if (i % 2 == 1) {
+            // Top half indices are already moved in deck
+            if (i < deck_.size() / 2)
+                card_queue.push(deck_[i]);
             deck_[i] = deck_[top_half_idx];
             top_half_idx++;
         }
