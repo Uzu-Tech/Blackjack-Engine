@@ -133,7 +133,6 @@
     <ClCompile Include="hand.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="player.cpp" />
-    <ClCompile Include="stats.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dealer.h" />
@@ -142,7 +141,6 @@
     <ClInclude Include="hand.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="rules.h" />
-    <ClInclude Include="stats.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
