@@ -4,6 +4,7 @@
 #include "player.h"
 #include "dealer.h"
 #include "game.h"
+#include "rules.h"
 //#include <chrono>
 //using namespace std::chrono;
 //auto start = high_resolution_clock::now();
@@ -14,13 +15,18 @@
 
 int main()
 {
-	constexpr int BANKROLL = 10000;
-
 	Deck deck;
 	deck.shuffleDeck();
 
-	Player player(BANKROLL);
+	Player player(Settings::BANKROLL);
 	Dealer dealer;
 
-	playBlackjackGame(deck, player, dealer);
+	std::cout << "Simulating Game...\n\n";
+	for (long long i = 0; i < Settings::NUM_SIMULATIONS; i++) {
+		playBlackjackGame(deck, player, dealer);
+		deck.buildDeck();
+		deck.shuffleDeck();
+	}
+
+	player.displayStats();
 }
