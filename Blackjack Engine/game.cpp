@@ -1,24 +1,28 @@
 #include "game.h"
 constexpr bool HIDDEN_UPCARD = true;
 
+// TODO check blackjack problem, fix increment hand
+
 void playBlackjackGame(Deck& deck, Player& player, Dealer& dealer)
 {
-	int max_bankroll = player.getBankroll();
-	for (int i = 0; i < Rules::NUM_RIFFLE_SHUFFLES; i++) {
-		deck.riffleShuffleDeck();
-	}
-
 	int reshuffle_threshold = static_cast<int>(std::round(Deck::DECK_SIZE * Rules::NUM_DECKS * Rules::RESHUFFLE_THRESHOLD));
 
 	while (deck.size() > reshuffle_threshold) {
-		player.calculateBet(max_bankroll);
+		player.calculateBet();
 		player.displayBetAndBankroll();
 		playBlackjackRound(deck, player, dealer);
-		std::cin.get();
-		system("cls");
+
+		if (!Settings::DISPLAY_OFF)
+		{
+			std::cin.get();
+			system("cls");
+		}
 	}
 
-	std::cout << "Round Over";
+	if (!Settings::DISPLAY_OFF)
+	{
+		std::cout << "Round Over";
+	}
 }
 
 void playBlackjackRound(Deck& deck, Player& player, Dealer& dealer)
@@ -30,36 +34,41 @@ void playBlackjackRound(Deck& deck, Player& player, Dealer& dealer)
 	dealer.displayHand(HIDDEN_UPCARD);
 	player.displayHand();
 	// Player loop
-	Player::Outcome player_outcome = playHand(deck, player, dealer);
-	bool has_blackjack_or_bust = hasBlackjackOrBust(player, player_outcome);
+	bool next_hand_empty = false;
+	bool has_blackjack_or_bust = true;
 
-	// Split loop
-	if (player_outcome == Player::Outcome::SPLIT) {
-		Player::Outcome outcome1 = playHand(deck, player, dealer);
-		bool hand1_bj_or_bust = hasBlackjackOrBust(player, player_outcome);
-
-		player.switchToSplitHand();
-		Player::Outcome outcome2 = playHand(deck, player, dealer);
-		bool hand2_bj_or_bust = hasBlackjackOrBust(player, player_outcome);
-		// Return to normal hand for displaying
-		player.switchToNormalHand();
-
-		has_blackjack_or_bust = (hand1_bj_or_bust && hand2_bj_or_bust);
+	while (!next_hand_empty) {
+		Player::Outcome player_outcome = playHand(deck, player, dealer);
+		next_hand_empty = player.isNextHandEmpty();
+		// Move on to next hand if it hasn't been played yet
+		if (player_outcome != Player::Outcome::SPLIT && !next_hand_empty) {
+			player.incrementHand();
+		}
+		// If any of the hands don't bust or have blackjack we have to view the dealer's hand
+		has_blackjack_or_bust = (hasBlackjackOrBust(player, player_outcome) && has_blackjack_or_bust);
 	}
 
+	player.returnToNormalHand();
 	// Show dealer upcard
 	dealer.displayHand(!HIDDEN_UPCARD);
-	// Dealer loop
-	dealerLoop(dealer, deck, has_blackjack_or_bust);
-	// Display results
-	Player::Result result = player.updateBankroll(dealer.getHandValue());
-	player.displayResult(result);
-	// Repeat for the split hand if needed
-	if (player.hasSplit()) {
-		player.switchToSplitHand();
-		result = player.updateBankroll(dealer.getHandValue());
-		player.displayResult(result);
+	// Dealer loop only if we need to
+	if (!has_blackjack_or_bust) {
+		dealerLoop(dealer, deck);
 	}
+	// Display results
+	int dealer_hand_value = dealer.getHandValue();
+	for (int i = 0; i < HandConstants::MAX_NUM_HANDS; i++) {
+		Player::Result result = player.updateBankroll(dealer_hand_value, dealer.hasBlackjack());
+		player.displayResult(result);
+
+		if (player.isNextHandEmpty()) {
+			break;
+		}
+		else {
+			player.incrementHand();
+		}
+	}
+
 	player.reset();
 	dealer.reset();
 }
@@ -69,12 +78,13 @@ Player::Outcome playHand(Deck& deck, Player& player, Dealer& dealer)
     // Player loop
     bool can_hit = true;
 	Card upcard = dealer.getUpcard();
+	int num = 0;
     while (can_hit) {
 		// Check for blackjack (first check since we could have blackjack straight away)
 		if (player.hasBlackjack()) {
 			return Player::Outcome::BLACKJACK;
 		}
-        // Decide Action
+        // Decide Action, takes into account if we've split three times
         Player::Action player_action = player.decideAction(upcard);
 
 		// If hand is double or stand and we can't double then we hit or stand
@@ -120,12 +130,7 @@ Player::Outcome playHand(Deck& deck, Player& player, Dealer& dealer)
 	return Player::Outcome::STAND;
 }
 
-void dealerLoop(Dealer& dealer, Deck& deck, bool has_blackjack_or_bust) {
-	// No need to play dealer hand
-	if (has_blackjack_or_bust) {
-		return;
-	}
-
+void dealerLoop(Dealer& dealer, Deck& deck) {
 	Dealer::Action dealer_action;
 	while ((dealer_action = dealer.decideAction()) == Dealer::Action::HIT) {
 		dealer.displayAction(dealer_action);

@@ -9,5 +9,5 @@
 void playBlackjackGame(Deck& deck, Player& player, Dealer& dealer);
 void playBlackjackRound(Deck& deck, Player& player, Dealer& dealer);
 Player::Outcome playHand(Deck& deck, Player& player, Dealer& dealer);
-void dealerLoop(Dealer& dealer, Deck& deck, bool has_blackjack_or_bust);
+void dealerLoop(Dealer& dealer, Deck& deck);
 bool hasBlackjackOrBust(Player& player, Player::Outcome outcome);
