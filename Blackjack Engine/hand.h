@@ -8,13 +8,14 @@ namespace HandConstants {
 	constexpr int MAX_NUM_CARDS = 11;   // 4 Aces, 4 Twos and 3 Threes = 21
 	constexpr int MAX_DECK_HAND = 17;   // Dealer must hit on 16 or less
 	constexpr int BLACKJACK = 21;       // Blackjack value
+	constexpr int MAX_NUM_HANDS = 4;
 
 	// Min and max values for hand types
 	constexpr int MIN_HARD_HAND = 2;
-	constexpr int MAX_HARD_HAND = 20;
+	constexpr int MAX_HARD_HAND = 21;
 
 	constexpr int MIN_SOFT_HAND = 13;
-	constexpr int MAX_SOFT_HAND = 20;
+	constexpr int MAX_SOFT_HAND = 21;
 
 	constexpr int MIN_PAIR_HAND = 2;
 	constexpr int MAX_PAIR_HAND = 11;
@@ -55,7 +56,9 @@ public:
 	// Whether the hand has an Ace valued as 11
 	bool isSoftHand() const;
 	bool isPairHand() const;
-	bool isEmpty() const { return hand_.empty(); };
+	bool isEmpty() const { 
+		return hand_.empty(); 
+	};
 	// Hand value to string conversion
 	std::string handValueToString() const;
 
