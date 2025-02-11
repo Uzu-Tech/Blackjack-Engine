@@ -28,7 +28,12 @@ public:
 	int getHandValue() const { return hand_.getHandValue(); }
 
 	bool isBust() const { return hand_.getHandValue() > HandConstants::BLACKJACK; };
-	bool hasBlackjack() const { return hand_.getHandValue() == HandConstants::BLACKJACK; };
+	bool hasBlackjack() const { 
+		return (
+			hand_.getHandValue() == HandConstants::BLACKJACK
+			&& hand_.getHand().size() == 2 // Blackjack only when has an Ace or King
+		);
+	};
 
 	void reset() { hand_.clearHand(); };
 

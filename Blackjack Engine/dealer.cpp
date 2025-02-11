@@ -5,7 +5,7 @@ Dealer::Action Dealer::decideAction()
 {
 	int hand_value = hand_.getHandValue();
 	return (
-		(hand_value < HandConstants::MAX_DECK_HAND || (hand_.isSoftHand() && hand_value == HandConstants::MAX_DECK_HAND)) ?
+		(hand_value < HandConstants::MAX_DECK_HAND) ?
 		Dealer::Action::HIT : Dealer::Action::STAND
 	);
 }
