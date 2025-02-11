@@ -58,7 +58,10 @@ void Deck::shuffleDeck()
     std::random_device rd;  // Get a random seed
     std::mt19937 g(rd());   // Seed Mersenne Twister PRNG
 
-    std::shuffle(deck_.begin(), deck_.end(), g); // Shuffle using g
+    for (int i = deck_.size() - 1; i > 0; --i) {
+        std::uniform_int_distribution<int> dist(0, i - 1); // Note: `i - 1` ensures cycles
+        std::swap(deck_[i], deck_[dist(g)]);
+    }
 }
 
 
@@ -78,7 +81,7 @@ void Deck::riffleShuffleDeck() {
         throw std::runtime_error("Deck should be full before riffle shuffling");
     }
 
-    std::queue<Card> card_queue;
+    static std::queue<Card> card_queue;
     size_t top_half_idx = deck_.size() / 2;
 
     for (int i = 0; i < deck_.size(); i++) {

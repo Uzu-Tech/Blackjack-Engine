@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <queue>
+#include <algorithm>
 #include "rules.h"
 
 struct Card {
